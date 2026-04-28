@@ -54,7 +54,88 @@ namespace SerialCommunication
 
         private void buttonConnect_Click(object sender, EventArgs e)
         {
-            // abc def ghi jkl
+            try
+            {
+                if (serialPortArduino.IsOpen)
+                {
+                    // ik heb een verbinding -> de gebruiker wil deze verbreken
+                    serialPortArduino.Close();
+                    radioButtonVerbonden.Checked = false;
+                    buttonConnect.Text = "Connect";
+                    labelStatus.Text = "Status: Disconnected";
+                }
+                else
+                {
+                    // ik heb geen verbinding -> de gebruiker wil een verbinding maken
+                    serialPortArduino.PortName = (string)comboBoxPoort.SelectedItem;
+                    serialPortArduino.BaudRate = Int32.Parse((string)comboBoxBaudrate.SelectedItem);
+                    serialPortArduino.DataBits = (int)numericUpDownDatabits.Value;
+
+                    // Parity
+                    if (radioButtonParityEven.Checked)
+                        serialPortArduino.Parity = Parity.Even;
+                    else if (radioButtonParityOdd.Checked)
+                        serialPortArduino.Parity = Parity.Odd;
+                    else if (radioButtonParityNone.Checked)
+                        serialPortArduino.Parity = Parity.None;
+                    else if (radioButtonParityMark.Checked)
+                        serialPortArduino.Parity = Parity.Mark;
+                    else if (radioButtonParitySpace.Checked)
+                        serialPortArduino.Parity = Parity.Space;
+
+                    // Stopbits
+                    if (radioButtonStopbitsNone.Checked)
+                        serialPortArduino.StopBits = StopBits.None;
+                    else if (radioButtonStopbitsOne.Checked)
+                        serialPortArduino.StopBits = StopBits.One;
+                    else if (radioButtonStopbitsOnePointFive.Checked)
+                        serialPortArduino.StopBits = StopBits.OnePointFive;
+                    else if (radioButtonStopbitsTwo.Checked)
+                        serialPortArduino.StopBits = StopBits.Two;
+
+                    // Handshake
+                    if (radioButtonHandshakeNone.Checked)
+                        serialPortArduino.Handshake = Handshake.None;
+                    else if (radioButtonHandshakeRTS.Checked)
+                        serialPortArduino.Handshake = Handshake.RequestToSend;
+                    else if (radioButtonHandshakeRTSXonXoff.Checked)
+                        serialPortArduino.Handshake = Handshake.RequestToSendXOnXOff;
+                    else if (radioButtonHandshakeXonXoff.Checked)
+                        serialPortArduino.Handshake = Handshake.XOnXOff;
+
+                    // Extra opties
+                    serialPortArduino.RtsEnable = checkBoxRtsEnable.Checked;
+                    serialPortArduino.DtrEnable = checkBoxDtrEnable.Checked;
+
+                    // Open de verbinding
+                    serialPortArduino.Open();
+                    string commando = "ping";
+                    serialPortArduino.WriteLine(commando);
+
+                    string antwoord = serialPortArduino.ReadLine();
+                    antwoord = antwoord.TrimEnd();
+
+                    if (antwoord == "pong")
+                    {
+                        radioButtonVerbonden.Checked = true;
+                        buttonConnect.Text = "Disconnect";
+                        labelStatus.Text = "Status: Connected";
+                    }
+                    else
+                    {
+                        serialPortArduino.Close();
+                        labelStatus.Text = "Error: verkeerd antwoord";
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                labelStatus.Text = "Error: " + exception.Message;
+                serialPortArduino.Close();
+                radioButtonVerbonden.Checked = false;
+                buttonConnect.Text = "Connect";
+
+            }
         }
     }
 }
