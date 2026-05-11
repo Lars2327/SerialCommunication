@@ -261,6 +261,8 @@ namespace SerialCommunication
         private void tabControl_SelectedIndexChanged(object sender, EventArgs e)
         {
             timerOefening3.Enabled = tabControl.SelectedIndex == 3;
+            timerOefening4.Enabled = tabControl.SelectedIndex == 4;
+            timerOefening5.Enabled = tabControl.SelectedIndex == 5;
         }
 
         private void timerOefening3_Tick(object sender, EventArgs e)
@@ -286,6 +288,94 @@ namespace SerialCommunication
                     radioButtonDigital7.Checked = antwoord7.Contains("1");
                 }
             }
+            catch (Exception exception)
+            {
+                labelStatus.Text = "Error: " + exception.Message;
+                serialPortArduino.Close();
+                radioButtonVerbonden.Checked = false;
+                buttonConnect.Text = "Connect";
+            }
+        }
+
+        private void timerOefening4_Tick(object sender, EventArgs e)
+        {
+            try
+            {
+                if (serialPortArduino.IsOpen)
+                {
+                    serialPortArduino.ReadExisting();
+
+                    string commando = "get a0";
+                    serialPortArduino.WriteLine(commando);
+
+                    string antwoord = serialPortArduino.ReadLine();
+                    antwoord = antwoord.Trim();
+                    antwoord = antwoord.Substring(4);
+
+                    int value = Int32.Parse(antwoord);
+
+                    labelAnalog0.Text = value.ToString();
+                }
+            }
+
+            catch (Exception exception)
+            {
+                labelStatus.Text = "Error: " + exception.Message;
+                serialPortArduino.Close();
+                radioButtonVerbonden.Checked = false;
+                buttonConnect.Text = "Connect";
+            }
+        }
+
+        private void timerOefening5_Tick(object sender, EventArgs e)
+        {
+            try
+            {
+                if (serialPortArduino.IsOpen)
+                {
+                    serialPortArduino.ReadExisting();
+
+
+                    // GEWENSTE TEMPERATUUR (A0)
+                    serialPortArduino.WriteLine("get a0");
+
+                    string antwoordA0 = serialPortArduino.ReadLine();
+                    antwoordA0 = antwoordA0.Trim();
+                    antwoordA0 = antwoordA0.Substring(4);
+
+                    int valueA0 = Int32.Parse(antwoordA0);
+
+                    double gewensteTemp = (valueA0 * 40.0 / 1023.0) + 5.0;
+
+                    labelGewensteTemp.Text = gewensteTemp.ToString("0.0") + " °C";
+
+
+                    // HUIDIGE TEMPERATUUR (A1)
+                    serialPortArduino.WriteLine("get a1");
+
+                    string antwoordA1 = serialPortArduino.ReadLine();
+                    antwoordA1 = antwoordA1.Trim();
+                    antwoordA1 = antwoordA1.Substring(4);
+
+                    int valueA1 = Int32.Parse(antwoordA1);
+
+                    double huidigeTemp = (valueA1 * 500.0 / 1023.0);
+
+                    labelHuidigeTemp.Text = huidigeTemp.ToString("0.0") + " °C";
+
+
+                    // LED AANSTUREN
+                    if (huidigeTemp < gewensteTemp)
+                    {
+                        serialPortArduino.WriteLine("set d2 1");
+                    }
+                    else
+                    {
+                        serialPortArduino.WriteLine("set d2 0");
+                    }
+                }
+            }
+
             catch (Exception exception)
             {
                 labelStatus.Text = "Error: " + exception.Message;
