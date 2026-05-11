@@ -265,17 +265,25 @@ namespace SerialCommunication
 
         private void timerOefening3_Tick(object sender, EventArgs e)
         {
+
             try
             {
                 if (serialPortArduino.IsOpen)
                 {
-                    serialPortArduino.ReadExisting();
-                    string commando = "get d5";
-                    serialPortArduino.WriteLine(commando);
-                    string antwoord = serialPortArduino.ReadLine();
-                    antwoord = antwoord.TrimEnd();
-                    antwoord = antwoord.Substring(4);
-                    radioButtonDigital5.Checked = (antwoord == "1");
+                    // DIGITAL 5
+                    serialPortArduino.WriteLine("get d5");
+                    string antwoord5 = serialPortArduino.ReadLine().Trim();
+                    radioButtonDigital5.Checked = antwoord5.Contains("1");
+
+                    // DIGITAL 6
+                    serialPortArduino.WriteLine("get d6");
+                    string antwoord6 = serialPortArduino.ReadLine().Trim();
+                    radioButtonDigital6.Checked = antwoord6.Contains("1");
+
+                    // DIGITAL 7
+                    serialPortArduino.WriteLine("get d7");
+                    string antwoord7 = serialPortArduino.ReadLine().Trim();
+                    radioButtonDigital7.Checked = antwoord7.Contains("1");
                 }
             }
             catch (Exception exception)
@@ -287,4 +295,5 @@ namespace SerialCommunication
             }
         }
     }
+    
 }
