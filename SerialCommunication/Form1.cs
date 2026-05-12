@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
 using System.IO.Ports;
 using System.Linq;
@@ -134,7 +135,6 @@ namespace SerialCommunication
                 serialPortArduino.Close();
                 radioButtonVerbonden.Checked = false;
                 buttonConnect.Text = "Connect";
-
             }
         }
 
@@ -272,17 +272,17 @@ namespace SerialCommunication
             {
                 if (serialPortArduino.IsOpen)
                 {
-                    // DIGITAL 5
+                    
                     serialPortArduino.WriteLine("get d5");
                     string antwoord5 = serialPortArduino.ReadLine().Trim();
                     radioButtonDigital5.Checked = antwoord5.Contains("1");
 
-                    // DIGITAL 6
+                    
                     serialPortArduino.WriteLine("get d6");
                     string antwoord6 = serialPortArduino.ReadLine().Trim();
                     radioButtonDigital6.Checked = antwoord6.Contains("1");
 
-                    // DIGITAL 7
+                    
                     serialPortArduino.WriteLine("get d7");
                     string antwoord7 = serialPortArduino.ReadLine().Trim();
                     radioButtonDigital7.Checked = antwoord7.Contains("1");
@@ -333,38 +333,55 @@ namespace SerialCommunication
             {
                 if (serialPortArduino.IsOpen)
                 {
+                    
+                    if (!SerialPort.GetPortNames().Contains(serialPortArduino.PortName))
+                    {
+                        labelStatus.Text = "Error: verbinding verbroken";
+
+                        radioButtonVerbonden.Checked = false;
+
+                        buttonConnect.Text = "Connect";
+
+                        serialPortArduino.Close();
+
+                        return;
+                    }
+
                     serialPortArduino.ReadExisting();
 
-
-                    // GEWENSTE TEMPERATUUR (A0)
+                   
                     serialPortArduino.WriteLine("get a0");
 
                     string antwoordA0 = serialPortArduino.ReadLine();
+
                     antwoordA0 = antwoordA0.Trim();
+
                     antwoordA0 = antwoordA0.Substring(4);
 
                     int valueA0 = Int32.Parse(antwoordA0);
 
                     double gewensteTemp = (valueA0 * 40.0 / 1023.0) + 5.0;
 
-                    labelGewensteTemp.Text = gewensteTemp.ToString("0.0") + " °C";
+                    labelGewensteTemp.Text =
+                        gewensteTemp.ToString("0.0") + " °C";
 
-
-                    // HUIDIGE TEMPERATUUR (A1)
+                   
                     serialPortArduino.WriteLine("get a1");
 
                     string antwoordA1 = serialPortArduino.ReadLine();
+
                     antwoordA1 = antwoordA1.Trim();
+
                     antwoordA1 = antwoordA1.Substring(4);
 
                     int valueA1 = Int32.Parse(antwoordA1);
 
                     double huidigeTemp = (valueA1 * 500.0 / 1023.0);
 
-                    labelHuidigeTemp.Text = huidigeTemp.ToString("0.0") + " °C";
+                    labelHuidigeTemp.Text =
+                        huidigeTemp.ToString("0.0") + " °C";
 
-
-                    // LED AANSTUREN
+                    
                     if (huidigeTemp < gewensteTemp)
                     {
                         serialPortArduino.WriteLine("set d2 1");
@@ -374,13 +391,29 @@ namespace SerialCommunication
                         serialPortArduino.WriteLine("set d2 0");
                     }
                 }
-            }
+                else
+                {
+                    labelStatus.Text = "Error: verbinding verbroken";
 
+                    radioButtonVerbonden.Checked = false;
+
+                    buttonConnect.Text = "Connect";
+                }
+            }
             catch (Exception exception)
             {
                 labelStatus.Text = "Error: " + exception.Message;
-                serialPortArduino.Close();
+
+                try
+                {
+                    serialPortArduino.Close();
+                }
+                catch
+                {
+                }
+
                 radioButtonVerbonden.Checked = false;
+
                 buttonConnect.Text = "Connect";
             }
         }
